@@ -1,0 +1,171 @@
+body {
+    background-color: #000;
+    color: #fff;
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden; /* To simulate the screen boundary */
+}
+
+.watch-face {
+    width: 300px; /* Approximate width, can be adjusted */
+    height: 550px; /* Approximate height, can be adjusted */
+    background-color: #000;
+    border-radius: 30px; /* Rounded corners for the watch */
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    overflow-y: auto; /* For scrolling if content exceeds height */
+    border: 2px solid #333; /* Optional: subtle border for the watch body */
+    position: relative; /* Add this to allow absolute positioning of children */
+}
+
+/* Hide scrollbar for a cleaner look */
+.watch-face::-webkit-scrollbar {
+    display: none;
+}
+.watch-face {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+
+.time {
+    font-size: 1.5em;
+    color: #ccc;
+    margin-bottom: 5px;
+}
+
+.title {
+    font-size: 1.8em;
+    color: #fff;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.metric {
+    width: 100%;
+    padding: 10px 0;
+    border-bottom: 1px solid #333; /* Separator lines */
+}
+
+.metric:last-child {
+    border-bottom: none;
+}
+
+.heart-rate .value-bpm  {
+    font-size: 3.5em;
+    color: #ff8c00; /* Orange color */
+    font-weight: bold;
+}
+
+.blood-pressure .value-mmhg {
+    font-size: 2.5em;
+    color: #ff8c00; /* Orange color */
+    font-weight: bold;
+    text-wrap: nowrap;
+}
+
+.body-temperature .value-celsius {
+    font-size: 2.5em;
+    color: #ff8c00; /* Orange color */
+    font-weight: bold;
+}
+
+.body-temperature .label, .blood-pressure .label {
+  font-size: 1em;
+  color: #aaa;
+}
+
+.heart-rate .unit {
+    font-size: 0.2em;
+    color: #ff8c00;
+}
+
+
+
+
+.steps .icon-steps {
+    font-size: 1.5em; /* Adjust as needed */
+    color: #6495ED; /* Light blue for the shoe icon */
+    margin-bottom: 5px;
+}
+
+.steps .value,
+.calories .value,
+.distance .value,
+.distance-alt .value {
+    font-size: 2.8em;
+    font-weight: bold;
+}
+
+.steps .value {
+    color: #6495ED; /* Light blue */
+}
+
+.calories .value {
+    color: #fff;
+}
+
+.distance .value, .distance-alt .value {
+    color: #fff;
+}
+
+
+.steps .label,
+.calories .label,
+.distance .label,
+.distance-alt .label {
+    font-size: 1em;
+    color: #aaa;
+}
+
+.checkmark-button {
+    margin-top: 20px;
+    width: 60px;
+    height: 60px;
+    background-color: #87CEFA; /* Light blue */
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.checkmark-button .icon-check {
+    font-size: 2em;
+    color: #000; /* Black checkmark */
+}
+
+.high-hr-alert {
+    display: none; /* Hidden by default */
+    background-color: red;
+    color: white;
+    padding: 12px;
+    margin: 15px auto;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 1.2em;
+    font-weight: bold;
+    width: 90%; /* Take up most of the watch face width */
+    position: absolute; /* Changed from absolute to fixed */
+    top: 150px; /* Position it below the heart rate display */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000; /* Increased z-index */
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.9); /* Stronger glow effect */
+    animation: pulse 1s infinite; /* Faster pulsing animation */
+    border: 2px solid #fff; /* White border for contrast */
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+} 

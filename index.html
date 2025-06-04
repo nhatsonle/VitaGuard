@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wearable Simulator</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div class="watch-face">
+        <div class="time" id="currentTime">12:33</div>
+        <div class="title">Son Le</div>
+        <div id="highHeartRateAlertMessage" class="high-hr-alert">⚠️ ALERT: High Heart Rate!</div>
+
+        <div class="metric heart-rate">
+            <div id="heartRateDisplay" class="value-bpm">86 <span class="unit">bpm</span></div>
+            <!-- Placeholder for graph -->
+            
+        </div>
+
+        <div class="metric blood-pressure">
+            <div id="bloodPressureDisplay" class="value-mmhg">100<span class="unit">mmHg</span></div>
+            <div class="label">Blood Pressure</div>
+        </div>
+
+        <div class = "metric body-temperature">
+            <div id = "BodyTemperatureDisplay" class = "value-celsius">36.5 <span class = "unit">°C</span></div>
+            <div class = "label">Body Temperature</div>
+        </div>
+
+
+        <div class="metric steps">
+            <div class="icon-steps">👟</div>
+            <div id="stepsDisplay" class="value">552</div>
+            <div class="label">steps</div>
+        </div>
+
+        <div class="metric calories">
+            <div id="caloriesDisplay" class="value">1200</div>
+            <div class="label">Calories</div>
+        </div>
+
+        <div class="metric distance">
+            <div id="distanceDisplay" class="value">10</div>
+            <div class="label">km</div>
+        </div>
+
+        <div id="insightBackdrop" class="fixed top-0 left-0 right-0 bottom-0 w-full h-full hidden"></div>
+        <!-- LLM Insight Container (hidden by default) -->
+        <div id="llmInsightContainer" class="absolute bottom-0 left-0 right-0 bg-gray-900 bg-opacity-90 p-4 rounded-b-lg text-sm text-gray-200 hidden w-full max-h-40 overflow-y-auto z-10">
+            <span id="llmInsightText"></span>
+            <div id="llmLoading" class="loader hidden mx-auto mt-2"></div>
+        </div>
+
+        <!-- Action Buttons (placed on top of the main content for demo purposes, could be swipe actions in real app) -->
+        <div class="absolute top-0 left-0 right-0 flex flex-col items-center justify-center h-full w-full bg-black bg-opacity-75 rounded-[20px] z-20 transition-opacity duration-300" id="actionButtonsOverlay" style="opacity: 0; pointer-events: none;">
+            
+            <button id="getInsightBtn"
+                    class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75">
+                ✨ Nhận lời khuyên sức khỏe
+            </button>
+            <button id="closeOverlayBtn"
+                    class="mt-4 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-full text-sm">
+                Đóng
+            </button>
+        </div>
+        
+        <!-- Button to open the overlay -->
+        <button id="openOverlayBtn"
+                class="absolute bottom-4 right-4 w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center text-white text-2xl shadow-lg transition-all duration-300 transform hover:scale-110">
+            +
+        </button>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
