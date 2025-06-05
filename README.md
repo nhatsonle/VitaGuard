@@ -1,7 +1,6 @@
 # Dự án Giám sát Sức khỏe Thông minh
 # Health Monitoring System
 ## Tổng quan
-![Logo](https://raw.githubusercontent.com/sonln/health-monitoring-system/main/logo.png)
 - Dự án này là một hệ thống demo mô phỏng vòng đeo tay thông minh và ứng dụng di động, chuyên về phát hiện và cảnh báo sức khỏe real-time. 
 - Nó giúp minh họa cách dữ liệu cảm biến được chuyển đến server, lưu trữ, và đẩy cảnh báo tức thời đến ứng dụng di động của người thân. 
 - Dự án cũng tích hợp AI (LLM) để cung cấp lời khuyên sức khỏe và gợi ý hoạt động.
