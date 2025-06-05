@@ -14,7 +14,7 @@ const llmInsightText = document.getElementById('llmInsightText');
 const llmLoading = document.getElementById('llmLoading');
 const bloodPressureDisplay = document.getElementById('bloodPressureDisplay');
 const bodyTemperatureDisplay = document.getElementById('BodyTemperatureDisplay');
-const flaskServerUrl = 'http://localhost:5000'; // Địa chỉ Flask server
+const flaskServerUrl = 'http://localhost:5002'; // Địa chỉ Flask server
 const apiKey = 'AIzaSyAeWAMEBjOCwAkKaPlfkV4-4SnxLh05wYQ';
 
 let currentHeartRate = 130; // Nhịp tim ban đầu (theo ảnh)

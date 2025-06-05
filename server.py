@@ -1,6 +1,7 @@
 # server.py
 from flask import Flask, request, jsonify, g
 from flask_cors import CORS
+from flask_socketio import SocketIO, emit # Import SocketIO và emit
 import sqlite3
 import time
 import os
@@ -10,8 +11,9 @@ app = Flask(__name__)
 # Trong môi trường thực tế, bạn nên chỉ định rõ các origin được phép.
 CORS(app)
 
-DATABASE = 'health_monitor.db'
+socketio = SocketIO(app, cors_allowed_origins="*") # Cho phép CORS cho WebSocket
 
+DATABASE = 'health_monitor.db'
 def get_db():
     """Kết nối đến cơ sở dữ liệu SQLite."""
     db = getattr(g, '_database', None)
@@ -90,7 +92,7 @@ def receive_health_data_or_alert():
         cursor = db.cursor()
         # Nếu có cảnh báo, lưu vào bảng alerts
         alert_message = "CẢNH BÁO NHỊP TIM CAO BẤT THƯỜNG!"
-        alert_location = "Giả định: 123 Đường ABC, Quận XYZ" # Vị trí giả định
+        alert_location = "123 Đường ABC, Quận XYZ" # Vị trí giả định
         try:
             cursor.execute(
                 "INSERT INTO alerts1 (alert_type, heart_rate, blood_pressure, body_temperature, timestamp, location, message, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -98,6 +100,18 @@ def receive_health_data_or_alert():
             )
             db.commit()
             print(">>> CẢNH BÁO NHỊP TIM CAO BẤT THƯỜNG ĐÃ ĐƯỢC KÍCH HOẠT VÀ LƯU TRỮ VÀO DB <<<")
+            
+        # Gửi cảnh báo real-time qua WebSocket cho tất cả các client
+            socketio.emit('new_alert', {
+                "is_alert_active": True,
+                "heart_rate": heart_rate,
+                "blood_pressure": blood_pressure,
+                "body_temperature": body_temperature,
+                "timestamp": current_time,
+                "location": alert_location,
+                "message": alert_message
+            })
+            print(">>> Đã emit sự kiện 'new_alert' qua WebSocket <<<")
         except sqlite3.Error as e:
             db.rollback()
             print(f"Lỗi khi lưu cảnh báo vào DB: {e}")
@@ -107,43 +121,13 @@ def receive_health_data_or_alert():
 
     return jsonify({"status": "success", "message": "Dữ liệu đã được nhận và xử lý"}), 200
 
-@app.route('/api/get_alert', methods=['GET'])
-def get_alert_status():
-    """
-    API endpoint để ứng dụng điện thoại truy vấn trạng thái cảnh báo hiện tại.
-    Sẽ trả về cảnh báo mới nhất đang hoạt động.
-    """
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("SELECT * FROM alerts WHERE is_active = 1 ORDER BY id DESC LIMIT 1")
-    alert = cursor.fetchone()
 
-    if alert:
-        # Chuyển đổi sqlite3.Row thành dictionary để jsonify
-        alert_dict = dict(alert)
-        alert_dict['is_active'] = bool(alert_dict['is_active']) # Convert 1/0 to boolean
-        return jsonify({
-            "is_alert_active": alert_dict['is_active'],
-            "heart_rate": alert_dict['heart_rate'],
-            "movement_status": alert_dict['movement_status'],
-            "timestamp": alert_dict['timestamp'],
-            "location": alert_dict['location'],
-            "message": alert_dict['message']
-        }), 200
-    else:
-        return jsonify({
-            "is_alert_active": False,
-            "heart_rate": None,
-            "movement_status": None,
-            "timestamp": None,
-            "location": None,
-            "message": "Không có cảnh báo khẩn cấp."
-        }), 200
 
 @app.route('/api/reset_alert', methods=['POST'])
 def reset_alert():
     """
     API endpoint để reset trạng thái cảnh báo (đánh dấu cảnh báo mới nhất đang hoạt động là không hoạt động).
+    Khi reset, sẽ emit một WebSocket event để thông báo cho các client.
     """
     db = get_db()
     cursor = db.cursor()
@@ -152,6 +136,14 @@ def reset_alert():
         cursor.execute("UPDATE alerts1 SET is_active = 0 WHERE id = (SELECT id FROM alerts1 WHERE is_active = 1 ORDER BY id DESC LIMIT 1)")
         db.commit()
         print("Trạng thái cảnh báo gần nhất đã được RESET trong DB.")
+        
+        # Gửi thông báo reset qua WebSocket cho tất cả các client
+        socketio.emit('alert_reset', {
+            "is_alert_active": False,
+            "message": "Không có cảnh báo khẩn cấp."
+        })
+        print(">>> Đã emit sự kiện 'alert_reset' qua WebSocket <<<")
+
         return jsonify({"status": "success", "message": "Cảnh báo gần nhất đã được reset"}), 200
     except sqlite3.Error as e:
         db.rollback()
@@ -178,9 +170,42 @@ def get_alert_history():
     print(f"Đã gửi {len(alert_list)} cảnh báo trong lịch sử.")
     return jsonify(alert_list), 200
 
+# Sự kiện khi một client kết nối WebSocket
+@socketio.on('connect')
+def test_connect():
+    print('Client đã kết nối WebSocket!')
+    # Khi client kết nối, đẩy trạng thái cảnh báo hiện tại cho client đó
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM alerts1 WHERE is_active = 1 ORDER BY id DESC LIMIT 1")
+    alert = cursor.fetchone()
+    
+    if alert:
+        alert_dict = dict(alert)
+        alert_dict['is_active'] = bool(alert_dict['is_active'])
+        emit('new_alert', {
+            "is_alert_active": alert_dict['is_active'],
+            "heart_rate": alert_dict['heart_rate'],
+            "blood_pressure": alert_dict['blood_pressure'],
+            "body_temperature": alert_dict['body_temperature'],
+            "timestamp": alert_dict['timestamp'],
+            "location": alert_dict['location'],
+            "message": alert_dict['message']
+        })
+    else:
+        emit('alert_reset', {
+            "is_alert_active": False,
+            "message": "Không có cảnh báo khẩn cấp."
+        })
+
+@socketio.on('disconnect')
+def test_disconnect():
+    print('Client đã ngắt kết nối WebSocket!')
+
+
 if __name__ == '__main__':
     # Khởi tạo DB khi server bắt đầu
     init_db()
-    # Chạy server trên cổng 5000
-    # host='0.0.0.0' để server có thể truy cập từ các thiết bị khác trong mạng cục bộ (nếu cần)
-    app.run(host='0.0.0.0', port=6000, debug=True)
+    # Chạy server SocketIO thay vì app.run()
+    # Mặc định SocketIO chạy trên cổng 5002
+    socketio.run(app, host='0.0.0.0', port=5002, debug=True)
