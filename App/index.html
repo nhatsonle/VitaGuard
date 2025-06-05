@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ứng dụng Điện thoại - Giả Lập</title>
+    <!-- Tải Tailwind CSS từ CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Tùy chỉnh font Inter */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Màu nền nhẹ nhàng */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Căn trên cùng */
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Giả lập khung điện thoại trên màn hình lớn */
+        @media (min-width: 768px) {
+            .phone-frame {
+                width: 400px; /* Chiều rộng cố định cho khung điện thoại */
+                min-height: 700px; /* Chiều cao tối thiểu */
+                border: 12px solid #333;
+                border-radius: 36px;
+                box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+                overflow: hidden;
+                background-color: white;
+            }
+        }
+        .alert-item {
+            border-left: 4px solid #ef4444; /* red-500 */
+        }
+    </style>
+</head>
+<body>
+    <div class="w-full max-w-md phone-frame bg-white rounded-lg shadow-xl p-6">
+        <!-- Tiêu đề ứng dụng -->
+        <h1 class="text-3xl font-extrabold text-center text-gray-800 mb-8">Health Monitoring App</h1>
+
+        <!-- Phần 1: Cảnh báo Sức khỏe Khẩn cấp (Từ Server) -->
+        <div class="mb-10 p-6 bg-white rounded-xl shadow-md border border-gray-200">
+            <h2 class="text-2xl font-bold text-gray-700 mb-4">Cảnh báo Sức khỏe Hiện tại</h2>
+
+            <!-- Trạng thái cảnh báo chính -->
+            <p id="alertStatus" class="text-xl font-semibold text-gray-600 mb-4">Trạng thái: Bình thường</p>
+
+            <!-- Chi tiết cảnh báo -->
+            <div id="alertDetails" class="hidden p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                <p class="font-bold text-lg mb-2">!!! CẢNH BÁO ĐỘT QUỴ KHẨN CẤP !!!</p>
+                <p id="warningInfo" class="text-base"></p>
+                <p class="mt-2 text-sm">Vui lòng liên hệ người thân ngay lập tức!</p>
+            </div>
+
+            <!-- Nút Reset cảnh báo (chỉ cho mục đích demo) -->
+            <button id="resetAlertBtn"
+                    class="mt-6 w-full px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg shadow-md transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75">
+                Đặt lại Cảnh báo Hiện tại
+            </button>
+        </div>
+
+        <!-- Phần 2: Thống kê Dữ liệu Sức khỏe (Mồ hôi & Da) - Giả lập trên App -->
+        <div class="mb-10 p-6 bg-white rounded-xl shadow-md border border-gray-200">
+            <h2 class="text-2xl font-bold text-gray-700 mb-4">Phân tích Dữ liệu Mồ hôi & Da (Giả lập)</h2>
+
+            <!-- Hiển thị dữ liệu hiện tại -->
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="bg-indigo-50 p-4 rounded-lg">
+                    <p class="text-sm text-indigo-700">Độ ẩm da:</p>
+                    <p id="skinMoistureDisplay" class="text-xl font-bold text-indigo-900">--%</p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg">
+                    <p class="text-sm text-purple-700">Độ mặn mồ hôi:</p>
+                    <p id="sweatSalinityDisplay" class="text-xl font-bold text-purple-900">--%</p>
+                </div>
+            </div>
+
+            <!-- Biểu đồ xu hướng đơn giản (dùng div) -->
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">Xu hướng 5 lần đo gần nhất:</h3>
+            <div id="trendChart" class="flex items-end h-20 bg-gray-100 rounded-lg p-2 mb-4 space-x-1">
+                <!-- Các cột biểu đồ sẽ được thêm bằng JS -->
+            </div>
+
+            <!-- Nguy cơ bệnh tiềm ẩn -->
+            <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-300">
+                <p class="text-sm text-yellow-700">Nguy cơ bệnh tiềm ẩn:</p>
+                <p id="riskAssessmentDisplay" class="text-lg font-bold text-yellow-800">Đang phân tích...</p>
+            </div>
+
+            <!-- Nút giả lập dữ liệu mới -->
+            <button id="simulateNewDataBtn"
+                    class="mt-6 w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75">
+                Giả lập Dữ liệu Mới & Cập nhật Thống kê
+            </button>
+        </div>
+
+        <!-- Phần 3: Lịch sử Cảnh báo (Từ Server) -->
+        <div class="p-6 bg-white rounded-xl shadow-md border border-gray-200">
+            <h2 class="text-2xl font-bold text-gray-700 mb-4">Lịch sử Cảnh báo</h2>
+            <div id="alertHistoryList" class="space-y-4">
+                <!-- Lịch sử cảnh báo sẽ được thêm vào đây bằng JS -->
+                <p class="text-gray-500 text-center">Không có cảnh báo nào trong lịch sử.</p>
+            </div>
+            <button id="refreshHistoryBtn"
+                    class="mt-6 w-full px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-bold rounded-lg shadow-md transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75">
+                Tải lại Lịch sử Cảnh báo
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // Địa chỉ của server Flask
+        const FLASK_SERVER_URL = 'http://localhost:5000';
+
+        // --- Phần Cảnh báo Sức khỏe Hiện tại ---
+        const alertStatus = document.getElementById('alertStatus');
+        const alertDetails = document.getElementById('alertDetails');
+        const warningInfo = document.getElementById('warningInfo');
+        const resetAlertBtn = document.getElementById('resetAlertBtn');
+
+        // Hàm cập nhật trạng thái cảnh báo trên UI điện thoại
+        function updateAlertUI(data) {
+            if (data.is_alert_active) {
+                alertStatus.textContent = '!!! CẢNH BÁO ĐỘT QUỴ KHẨN CẤP !!!';
+                alertStatus.classList.remove('text-gray-600');
+                alertStatus.classList.add('text-red-600', 'font-extrabold', 'text-3xl');
+
+                warningInfo.innerHTML = `
+                    Nhịp tim: <span class="font-bold">${data.heart_rate} bpm</span><br>
+                    Vận động: <span class="font-bold">${data.movement_status}</span><br>
+                    Thời gian: <span class="font-bold">${data.timestamp}</span><br>
+                    Vị trí: <span class="font-bold">${data.location}</span><br>
+                `;
+                alertDetails.classList.remove('hidden');
+            } else {
+                alertStatus.textContent = 'Trạng thái: Bình thường';
+                alertStatus.classList.remove('text-red-600', 'font-extrabold', 'text-3xl');
+                alertStatus.classList.add('text-gray-600');
+                alertDetails.classList.add('hidden');
+                warningInfo.innerHTML = '';
+            }
+        }
+
+        // Hàm truy vấn server để lấy trạng thái cảnh báo hiện tại
+        async function fetchCurrentAlertStatus() {
+            try {
+                const response = await fetch(`${FLASK_SERVER_URL}/api/get_alert`);
+                const data = await response.json();
+                console.log('[Điện thoại <- Server] Nhận trạng thái cảnh báo hiện tại:', data);
+                updateAlertUI(data);
+            } catch (error) {
+                console.error('[Điện thoại <- Server] Lỗi khi lấy trạng thái cảnh báo hiện tại:', error);
+            }
+        }
+
+        // Hàm gửi yêu cầu reset cảnh báo hiện tại đến server
+        async function resetAlertOnServer() {
+            try {
+                const response = await fetch(`${FLASK_SERVER_URL}/api/reset_alert`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const result = await response.json();
+                console.log(`[Điện thoại -> Server] Phản hồi reset cảnh báo: ${result.message}`);
+                await fetchCurrentAlertStatus(); // Cập nhật lại UI cảnh báo hiện tại
+                await fetchAlertHistory(); // Cập nhật lại lịch sử cảnh báo
+            } catch (error) {
+                console.error('[Điện thoại -> Server] Lỗi khi reset cảnh báo:', error);
+            }
+        }
+
+        resetAlertBtn.addEventListener('click', resetAlertOnServer);
+
+
+        // --- Phần Thống kê Dữ liệu Sức khỏe (Giả lập trên App) ---
+        const skinMoistureDisplay = document.getElementById('skinMoistureDisplay');
+        const sweatSalinityDisplay = document.getElementById('sweatSalinityDisplay');
+        const trendChart = document.getElementById('trendChart');
+        const riskAssessmentDisplay = document.getElementById('riskAssessmentDisplay');
+        const simulateNewDataBtn = document.getElementById('simulateNewDataBtn');
+
+        // Dữ liệu giả định (lưu trữ 5 lần đo gần nhất)
+        let healthDataHistory = [];
+        const MAX_HISTORY = 5;
+
+        function generateRandomHealthData() {
+            const moisture = Math.floor(Math.random() * (95 - 50 + 1)) + 50; // Độ ẩm da 50-95%
+            const salinity = (Math.random() * (1.2 - 0.3) + 0.3).toFixed(2); // Độ mặn mồ hôi 0.3-1.2%
+            return { moisture, salinity };
+        }
+
+        function updateHealthDataUI() {
+            if (healthDataHistory.length === 0) {
+                skinMoistureDisplay.textContent = '--%';
+                sweatSalinityDisplay.textContent = '--%';
+                riskAssessmentDisplay.textContent = 'Đang chờ dữ liệu...';
+                trendChart.innerHTML = '';
+                return;
+            }
+
+            const latestData = healthDataHistory[healthDataHistory.length - 1];
+            skinMoistureDisplay.textContent = `${latestData.moisture}%`;
+            sweatSalinityDisplay.textContent = `${latestData.salinity}%`;
+
+            // Cập nhật biểu đồ xu hướng
+            trendChart.innerHTML = ''; // Xóa biểu đồ cũ
+            healthDataHistory.forEach(data => {
+                // Chiều cao cột biểu đồ dựa trên độ ẩm da (ví dụ)
+                const barHeight = (data.moisture / 100) * 80; // Tối đa 80px
+                const bar = document.createElement('div');
+                bar.className = 'w-4 bg-blue-400 rounded-t-sm transition-all duration-500 ease-out';
+                bar.style.height = `${barHeight}px`;
+                trendChart.appendChild(bar);
+            });
+
+            // Đánh giá nguy cơ bệnh tiềm ẩn
+            let risk = 'Bình thường';
+            let riskColor = 'text-green-800';
+
+            const avgMoisture = healthDataHistory.reduce((sum, d) => sum + d.moisture, 0) / healthDataHistory.length;
+            const avgSalinity = healthDataHistory.reduce((sum, d) => sum + parseFloat(d.salinity), 0) / healthDataHistory.length;
+
+            if (avgMoisture < 60) {
+                risk = 'Nguy cơ mất nước nhẹ';
+                riskColor = 'text-yellow-800';
+            }
+            if (avgMoisture < 50) {
+                risk = 'Nguy cơ da khô, nứt nẻ';
+                riskColor = 'text-orange-800';
+            }
+            if (avgSalinity > 1.0) {
+                risk = 'Nguy cơ rối loạn điện giải';
+                riskColor = 'text-red-800';
+            }
+
+            riskAssessmentDisplay.textContent = risk;
+            riskAssessmentDisplay.className = `text-lg font-bold ${riskColor}`;
+        }
+
+        function simulateNewData() {
+            const newData = generateRandomHealthData();
+            healthDataHistory.push(newData);
+            if (healthDataHistory.length > MAX_HISTORY) {
+                healthDataHistory.shift(); // Xóa dữ liệu cũ nhất nếu vượt quá giới hạn
+            }
+            updateHealthDataUI();
+            console.log(`[Điện thoại] Đã giả lập dữ liệu mới: Độ ẩm da ${newData.moisture}%, Độ mặn mồ hôi ${newData.salinity}%.`);
+        }
+
+        simulateNewDataBtn.addEventListener('click', simulateNewData);
+
+
+        // --- Phần Lịch sử Cảnh báo (Từ Server) ---
+        const alertHistoryList = document.getElementById('alertHistoryList');
+        const refreshHistoryBtn = document.getElementById('refreshHistoryBtn');
+
+        // Hàm fetch lịch sử cảnh báo từ server và hiển thị
+        async function fetchAlertHistory() {
+            try {
+                const response = await fetch(`${FLASK_SERVER_URL}/api/alert_history`);
+                const alerts = await response.json();
+                console.log('[Điện thoại <- Server] Lịch sử cảnh báo:', alerts);
+
+                alertHistoryList.innerHTML = ''; // Xóa danh sách cũ
+
+                if (alerts.length === 0) {
+                    alertHistoryList.innerHTML = '<p class="text-gray-500 text-center">Không có cảnh báo nào trong lịch sử.</p>';
+                    return;
+                }
+
+                alerts.forEach(alert => {
+                    const alertItem = document.createElement('div');
+                    alertItem.className = `p-3 rounded-lg shadow-sm mb-2 ${alert.is_active ? 'bg-red-100 alert-item border-red-500' : 'bg-gray-50 border-gray-300'}`;
+                    
+                    alertItem.innerHTML = `
+                        <p class="font-bold ${alert.is_active ? 'text-red-700' : 'text-gray-700'}">${alert.message} ${alert.is_active ? '(Đang hoạt động)' : ''}</p>
+                        <p class="text-sm text-gray-600">Nhịp tim: ${alert.heart_rate} bpm</p>
+                        <p class="text-sm text-gray-600">Vận động: ${alert.movement_status}</p>
+                        <p class="text-xs text-gray-500">Thời gian: ${alert.timestamp}</p>
+                        <p class="text-xs text-gray-500">Vị trí: ${alert.location}</p>
+                    `;
+                    alertHistoryList.appendChild(alertItem);
+                });
+            } catch (error) {
+                console.error('[Điện thoại <- Server] Lỗi khi lấy lịch sử cảnh báo:', error);
+                alertHistoryList.innerHTML = '<p class="text-red-500 text-center">Lỗi tải lịch sử cảnh báo.</p>';
+            }
+        }
+
+        refreshHistoryBtn.addEventListener('click', fetchAlertHistory);
+
+
+        // Khởi tạo dữ liệu ban đầu và bắt đầu polling khi tải trang
+        document.addEventListener('DOMContentLoaded', () => {
+            // Giả lập một vài dữ liệu ban đầu cho phần thống kê sức khỏe trên app
+            for (let i = 0; i < MAX_HISTORY - 2; i++) {
+                healthDataHistory.push(generateRandomHealthData());
+            }
+            updateHealthDataUI();
+
+            // Bắt đầu polling trạng thái cảnh báo hiện tại mỗi 3 giây
+            fetchCurrentAlertStatus(); // Lấy trạng thái ban đầu
+            setInterval(fetchCurrentAlertStatus, 3000); // Polling mỗi 3 giây
+
+            // Tải lịch sử cảnh báo khi tải trang
+            fetchAlertHistory();
+        });
+    </script>
+</body>
+</html>

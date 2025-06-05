@@ -14,7 +14,7 @@ const llmInsightText = document.getElementById('llmInsightText');
 const llmLoading = document.getElementById('llmLoading');
 const bloodPressureDisplay = document.getElementById('bloodPressureDisplay');
 const bodyTemperatureDisplay = document.getElementById('BodyTemperatureDisplay');
-
+const flaskServerUrl = 'http://localhost:5000'; // Địa chỉ Flask server
 const apiKey = 'AIzaSyAeWAMEBjOCwAkKaPlfkV4-4SnxLh05wYQ';
 
 let currentHeartRate = 130; // Nhịp tim ban đầu (theo ảnh)
@@ -35,12 +35,44 @@ function updateCurrentTime() {
   currentTimeDisplay.textContent = `${hours}:${minutes}`;
 }
 
+
+
+// Hàm gửi dữ liệu sức khỏe/cảnh báo lên server
+async function sendHealthDataOrAlertToServer(isWarning) {
+  if(isWarningTriggered) {
+    const data = {
+        heart_rate: currentHeartRate,
+        is_warning_triggered: isWarning,
+        steps: currentSteps, // Gửi cả các dữ liệu này dù server không lưu tất cả
+        calories: currentCalories,
+        distance: currentDistance,
+        blood_pressure: currentBloodPressure,
+        body_temperature: currentBodyTemperature
+    };
+
+    try {
+        // Thay đổi endpoint thành tên mới
+        const response = await fetch(`${flaskServerUrl}/api/health_data_or_alert`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        console.log(`[Vòng đeo tay -> Server] Phản hồi: ${result.message}`);
+    } catch (error) {
+        console.error('[Vòng đeo tay -> Server] Lỗi khi gửi dữ liệu:', error);
+    }
+}
+}
+
 // Hàm giả lập dữ liệu cảm biến bình thường
 function startSensorSimulation() {
   if (sensorInterval) clearInterval(sensorInterval); // Xóa interval cũ nếu có
   sensorInterval = setInterval(() => {
       if (!isWarningTriggered) {
-          currentHeartRate = Math.floor(Math.random() * (130 - 60 + 1)) + 60; // Nhịp tim 60-130
+          currentHeartRate = Math.floor(Math.random() * (150 - 60 + 1)) + 60; // Nhịp tim 60-130
           currentSteps = Math.floor(Math.random() * (1000 - 300 + 1)) + 300; // Bước chân 300-1000
           currentCalories = Math.floor(Math.random() * (1500 - 500 + 1)) + 500; // Calories 500-1500
           currentDistance = (Math.random() * (15 - 3) + 3).toFixed(1); // Km 3.0-15.0
@@ -48,6 +80,7 @@ function startSensorSimulation() {
           currentBodyTemperature = ((Math.random() * (40 - 36.0 + 1)) + 36.0).toFixed(1); // Nhiệt độ 36.0-40.0
           updateSensorDataUI();
           
+        
       }
       
 
@@ -59,7 +92,9 @@ function startSensorSimulation() {
               highHeartRateAlertMessageDiv.style.visibility = 'visible';
               highHeartRateAlertMessageDiv.style.opacity = '1';
               highHeartRateAlertMessageDiv.textContent = `⚠️ ALERT: High Heart Rate: ${currentHeartRate} bpm!`;
+              isWarningTriggered = true; // Set warning flag to true
               // Make the heart rate display red to indicate danger
+              sendHealthDataOrAlertToServer(isWarningTriggered); // Gửi dữ liệu sức khỏe lên server
               if (heartRateDisplay) {
                   heartRateDisplay.style.color = '#ff0000';
               }
@@ -116,7 +151,7 @@ async function getHealthInsightFromLLM() {
   llmInsightText.textContent = '';
   llmLoading.classList.remove('hidden'); // Hiển thị loading spinner
 
-  let prompt = 'Nhịp tim của tôi là ' + currentHeartRate + ' bpm. Huyết áp của tôi là ' + currentBloodPressure + ' mmHg. Nhiệt độ cơ thể của tôi là ' + currentBodyTemperature + ' °C. Bước chân của tôi là ' + currentSteps + '. Hãy cho tôi một lời khuyên sức khỏe ngắn gọn, tích cực và dễ hiểu (tối đa 50 từ) cho một người đeo vòng tay thông minh.';
+  let prompt = 'Nhịp tim của tôi là ' + currentHeartRate + ' bpm. Huyết áp của tôi là ' + currentBloodPressure + ' mmHg. Nhiệt độ cơ thể của tôi là ' + currentBodyTemperature + ' °C. Bước chân của tôi là ' + currentSteps + '. Hãy cho tôi một lời khuyên sức khỏe ngắn gọn, tích cực và dễ hiểu (tối đa 50 từ) cho một người đeo vòng tay thông minh. Hãy ngắt câu trả lời của bạn thành các đoạn nhỏ, mỗi đoạn không quá 20 từ.';
 
   let chatHistory = [];
   chatHistory.push({role: 'user', parts: [{text: prompt}]});
@@ -201,6 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (currentBloodPressure >= 140) {
     bloodPressureAlertMessageDiv.style.display = 'block';
     bloodPressureAlertMessageDiv.textContent = `⚠️ ALERT: High Blood Pressure: ${currentBloodPressure} mmHg!`;
+    isWarningTriggered = true; // Set warning flag to true
     if (bloodPressureDisplay) {
         bloodPressureDisplay.style.color = '#ff0000';
     }
@@ -214,6 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (currentBodyTemperature >= 37.5) {
     bodyTemperatureAlertMessageDiv.style.display = 'block';
     bodyTemperatureAlertMessageDiv.textContent = `⚠️ ALERT: High Body Temperature: ${currentBodyTemperature} °C!`;
+    isWarningTriggered = true; // Set warning flag to true
     if (bodyTemperatureDisplay) {
         bodyTemperatureDisplay.style.color = '#ff0000';
     }
